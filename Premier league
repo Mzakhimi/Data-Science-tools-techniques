@@ -1,0 +1,222 @@
+"""
+Created on Mon Jun 19 16:39:32 2023
+
+@author: Administrator
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import LabelEncoder
+data = pd.read_csv(r'C:\Users\Administrator\Desktop\Minor\Eindproject\PremierLeague.csv')
+
+########################## CHECK HOW MANY GAMES ARE PLAYED
+matches_per_team = data['HomeTeam'].value_counts() + data['AwayTeam'].value_counts()
+sorted_teams = matches_per_team.sort_values(ascending=False)
+plt.figure(figsize=(12, 6))
+sorted_teams.plot(kind='bar')
+plt.title('Number of Matches Played by Each Team')
+plt.xlabel('Team')
+plt.ylabel('Number of Matches')
+plt.xticks(rotation=45)
+plt.show()
+
+######################################### Count the number of wins
+ 
+home_wins = data[data['FTR'] == 'H']['HomeTeam'].value_counts()
+away_wins = data[data['FTR'] == 'A']['AwayTeam'].value_counts()
+
+total_wins = home_wins.add(away_wins, fill_value=0)
+
+team_with_most_wins = total_wins.idxmax()
+num_wins = total_wins.max()
+
+print("Team with the most wins:", team_with_most_wins)
+print("Number of wins:", num_wins)
+
+################################### VISUALIZE THE NUMBER OF WINS!
+
+home_wins = data[data['FTR'] == 'H']['HomeTeam'].value_counts()
+away_wins = data[data['FTR'] == 'A']['AwayTeam'].value_counts()
+total_wins = home_wins.add(away_wins, fill_value=0)
+sorted_teams = total_wins.sort_values(ascending=False)
+
+plt.bar(sorted_teams.index, sorted_teams.values)
+plt.xlabel('Team')
+plt.ylabel('Number of Wins')
+plt.title('Number of Wins for Each Team')
+plt.xticks(rotation=90) 
+plt.show()
+
+######################### SEE how many red & yellow cards PER TEAM
+
+yellow_cards_home = data['HY'].groupby(data['HomeTeam']).sum()
+yellow_cards_away = data['AY'].groupby(data['AwayTeam']).sum()
+red_cards_home = data['HR'].groupby(data['HomeTeam']).sum()
+red_cards_away = data['AR'].groupby(data['AwayTeam']).sum()
+
+total_yellow_cards = yellow_cards_home.add(yellow_cards_away, fill_value=0)
+total_red_cards = red_cards_home.add(red_cards_away, fill_value=0)
+
+team_with_most_yellow_cards = total_yellow_cards.idxmax()
+num_yellow_cards = total_yellow_cards.max()
+
+team_with_most_red_cards = total_red_cards.idxmax()
+num_red_cards = total_red_cards.max()
+
+plt.bar(total_yellow_cards.index, total_yellow_cards.values)
+plt.xlabel('Team')
+plt.ylabel('Number of Yellow Cards')
+plt.title('Number of Yellow Cards for Each Team')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.bar(total_red_cards.index, total_red_cards.values)
+plt.xlabel('Team')
+plt.ylabel('Number of Red Cards')
+plt.title('Number of Red Cards for Each Team')
+plt.xticks(rotation=90)
+plt.show()
+
+print("Team with the most yellow cards:", team_with_most_yellow_cards)
+print("Number of yellow cards:", num_yellow_cards)
+
+print("Team with the most red cards:", team_with_most_red_cards)
+print("Number of red cards:", num_red_cards)
+######################### SEE WICH REFEREE GAVE THE MOST RED & Yellow cards
+
+yellow_cards_by_referee = data.groupby('Referee')['HY', 'AY'].sum().sum(axis=1)
+red_cards_by_referee = data.groupby('Referee')['HR', 'AR'].sum().sum(axis=1)
+
+referee_with_most_yellow_cards = yellow_cards_by_referee.idxmax()
+num_yellow_cards = yellow_cards_by_referee.max()
+
+referee_with_most_red_cards = red_cards_by_referee.idxmax()
+num_red_cards = red_cards_by_referee.max()
+
+plt.bar(yellow_cards_by_referee.index, yellow_cards_by_referee.values)
+plt.xlabel('Referee')
+plt.ylabel('Number of Yellow Cards')
+plt.title('Number of Yellow Cards by Referee')
+plt.xticks(rotation=90)
+plt.show()
+
+plt.bar(red_cards_by_referee.index, red_cards_by_referee.values)
+plt.xlabel('Referee')
+plt.ylabel('Number of Red Cards')
+plt.title('Number of Red Cards by Referee')
+plt.xticks(rotation=90)
+plt.show()
+
+print("Referee with the most yellow cards:", referee_with_most_yellow_cards)
+print("Number of yellow cards:", num_yellow_cards)
+
+print("Referee with the most red cards:", referee_with_most_red_cards)
+print("Number of red cards:", num_red_cards)
+
+################################### SEE WICH TEAM HAD THE MOST GOALS SCORED
+
+goals_home = data.groupby('HomeTeam')['FTHG'].sum()
+goals_away = data.groupby('AwayTeam')['FTAG'].sum()
+
+total_goals = goals_home.add(goals_away, fill_value=0)
+sorted_teams = total_goals.sort_values(ascending=False)
+
+plt.bar(sorted_teams.index, sorted_teams.values)
+plt.xlabel('Team')
+plt.ylabel('Total Goals')
+plt.title('Total Goals Scored by Each Team')
+plt.xticks(rotation=90)
+plt.show()
+
+most_goals_teams = sorted_teams.head(5)  
+print("Teams with the most goals:")
+print(most_goals_teams)
+
+############################# SEE WICH TEAM RECEIVED THE MOST GOALS
+goals_conceded_home = data.groupby('HomeTeam')['FTAG'].sum()
+goals_conceded_away = data.groupby('AwayTeam')['FTHG'].sum()
+
+total_goals_conceded = goals_conceded_home.add(goals_conceded_away, fill_value=0)
+sorted_teams = total_goals_conceded.sort_values(ascending=False)
+
+plt.bar(sorted_teams.index, sorted_teams.values)
+plt.xlabel('Team')
+plt.ylabel('Total Goals Conceded')
+plt.title('Total Goals Conceded by Each Team')
+plt.xticks(rotation=90)
+plt.show()
+
+team_with_most_goals_conceded = sorted_teams.idxmax()
+num_goals_conceded = sorted_teams.max()
+
+print("Team with the most goals conceded:", team_with_most_goals_conceded)
+print("Number of goals conceded:", num_goals_conceded)
+
+############################### SEE THE RESULTS OF JUST ONE TEAM#### 
+team_name = 'Southampton'
+
+team_home = data[data['HomeTeam'] == team_name]
+team_away = data[data['AwayTeam'] == team_name]
+
+wins_home = team_home[team_home['FTR'] == 'H'].shape[0]
+wins_away = team_away[team_away['FTR'] == 'A'].shape[0]
+total_wins = wins_home + wins_away
+
+losses_home = team_home[team_home['FTR'] == 'A'].shape[0]
+losses_away = team_away[team_away['FTR'] == 'H'].shape[0]
+total_losses = losses_home + losses_away
+
+goals_scored_home = team_home['FTHG'].sum()
+goals_scored_away = team_away['FTAG'].sum()
+total_goals_scored = goals_scored_home + goals_scored_away
+
+goals_conceded_home = team_home['FTAG'].sum()
+goals_conceded_away = team_away['FTHG'].sum()
+total_goals_conceded = goals_conceded_home + goals_conceded_away
+
+yellow_cards_home = team_home['HY'].sum()
+yellow_cards_away = team_away['AY'].sum()
+total_yellow_cards = yellow_cards_home + yellow_cards_away
+
+red_cards_home = team_home['HR'].sum()
+red_cards_away = team_away['AR'].sum()
+total_red_cards = red_cards_home + red_cards_away
+
+print("Team: ", team_name)
+print("Total Wins: ", total_wins)
+print("Total Losses: ", total_losses)
+print("Goals Scored: ", total_goals_scored)
+print("Goals Conceded: ", total_goals_conceded)
+print("Total Yellow Cards: ", total_yellow_cards)
+print("Total Red Cards: ", total_red_cards)
+
+###############################KN-Model
+columns_to_drop = ['Div', 'Date', 'Time', 'Referee']
+data.drop(columns=columns_to_drop, inplace=True)
+
+data.fillna(data.mean(), inplace=True)
+
+categorical_columns = ['HomeTeam', 'AwayTeam', 'HTR']
+data_encoded = pd.get_dummies(data, columns=categorical_columns)
+
+label_encoder = LabelEncoder()
+data_encoded['FTR'] = label_encoder.fit_transform(data_encoded['FTR'])
+
+X = data_encoded.drop(columns=['FTR'])
+y = data_encoded['FTR']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+k = 5 
+knn = KNeighborsClassifier(n_neighbors=k)
+knn.fit(X_train, y_train)
+
+y_pred = knn.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy}")
